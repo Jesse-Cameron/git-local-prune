@@ -1,3 +1,10 @@
+use std::process;
+use std::path::Path;
+
 fn main() {
-    println!("Hello, world!");
+
+    if !Path::new(".git").exists() {
+        println!("Not in a git directory, couldn't find .git");
+        process::exit(1);
+    }
 }
