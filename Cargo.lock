@@ -1,0 +1,4 @@
+[[package]]
+name = "git-branch-rm"
+version = "0.1.2"
+
