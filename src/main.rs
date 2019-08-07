@@ -1,14 +1,31 @@
+extern crate regex;
 use std::path::Path;
 use std::process;
 use std::fs;
+use regex::Regex;
 
 /**
  * Find branches that are tracking a remote
  */
-fn git_get_refs() {
+fn get_branches() -> Vec<String> {
     let git_config = fs::read_to_string(".git/config")
-        .expect("Could not read the file");
-    println!("Git Config:\n {}", git_config);
+        .unwrap();
+    let re = Regex::new(r#"^\[branch "([^"]*)"]$"#).unwrap();
+    
+    let branch_names: Vec<String> = git_config.lines()
+        .map(|line| {
+            let trimmed_line: &str = line.trim();
+            let branch_capture = re.captures(trimmed_line);
+            match branch_capture {
+                None => None,
+                Some(captures) => Some(captures.get(1).unwrap().as_str())
+            }
+        })
+        .filter_map(|line| line)
+        .map(|line| line.to_string())
+        .collect();
+
+    (branch_names)
 }
 
 /**
@@ -26,11 +43,16 @@ fn main() {
         process::exit(1);
     }
 
-    println!("pruning current branches");
-    if let Err(err) = git_prune() {
-        println!("Error: {}", err);
-        process::exit(1);
-    }
+    // println!("pruning current branches");
+    // if let Err(err) = git_prune() {
+    //     println!("Error: {}", err);
+    //     process::exit(1);
+    // }
 
-    git_get_refs();
+    // steps
+    // find all local branches
+    // find the branches that are tracking a remote
+    let local_branches = get_branches();
+    // find the subset of branches that are tracking a remote that no long exist
+    // delete those branches
 }
