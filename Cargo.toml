@@ -5,4 +5,5 @@ authors = ["Jesse <jessec.cameron@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+walkdir = "2.2.7"
 regex = '1.2.1'
