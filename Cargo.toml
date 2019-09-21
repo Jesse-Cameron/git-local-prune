@@ -1,7 +1,9 @@
 [package]
 name = "git-branch-rm"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Jesse <jessec.cameron@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+walkdir = "2.2.7"
+regex = '1.2.1'

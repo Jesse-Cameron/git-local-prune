@@ -1,14 +1,10 @@
-use std::process;
-use std::path::Path;
+extern crate walkdir;
+extern crate regex;
 
-/**
- * Remove the local references to the remote branches that are stale
- */
-fn git_prune() -> Result<std::process::ExitStatus, std::io::Error>{
-    process::Command::new("git")
-        .args(&["remote", "prune", "origin"])
-        .status()
-}
+use std::path::Path;
+use std::process;
+
+mod branches;
 
 fn main() {
     if !Path::new(".git").exists() {
@@ -16,9 +12,21 @@ fn main() {
         process::exit(1);
     }
 
-    println!("pruning current branches");
-    if let Err(err) = git_prune() {
-        println!("Error: {}", err);
-        process::exit(1);
-    }
+    // println!("pruning current branches");
+    // if let Err(err) = git_prune() {
+    //     println!("Error: {}", err);
+    //     process::exit(1);
+    // }
+
+    // steps
+    // find all local branches
+    // find the branches that are tracking a remote
+    let local_branches = branches::local::retrieve();
+    println!("{:?}", local_branches);
+    // get all of the remote branches
+    let remote_branches = branches::remote::retrieve();
+    println!("{:?}", remote_branches);
+    // find the subset of branches that are tracking a remote that no long exist
+    //
+    // delete those branches
 }
