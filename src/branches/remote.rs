@@ -43,3 +43,19 @@ pub fn retrieve() ->  Vec<String> {
     (branches)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn correctly_removes_prefixes() {
+        let test_str = String::from(".git/refs/remotes/origin/master");
+        assert_eq!(remove_prefix(test_str), "master");
+    }
+
+    #[test]
+    fn correctly_leaves_prefixes() {
+        let test_str = String::from(".git/refs/remotes/tracking/master");
+        assert_eq!(remove_prefix(test_str), ".git/refs/remotes/tracking/master")
+    }
+}

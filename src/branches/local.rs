@@ -3,7 +3,7 @@ extern crate regex;
 use std::fs;
 use regex::Regex;
 
-fn white_listed_branch(branch_name: &&str) -> bool {
+fn ignored_branches(branch_name: &&str) -> bool {
     (!branch_name.contains("master"))
 }
 
@@ -25,9 +25,26 @@ pub fn retrieve() -> Vec<String> {
             }
         })
         .filter_map(|line| line) // remove any None objects from the list and return tge Some value
-        .filter(white_listed_branch)
+        .filter(ignored_branches)
         .map(|line| line.to_string())
         .collect();
 
     (branch_names)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ignored_branches_valid() {
+        let test_str = "origin/master";
+        assert!(!ignored_branches(&test_str));
+    }
+
+    #[test]
+    fn ignored_branches_invalid() {
+        let test_str = "origin/develop";
+        assert!(ignored_branches(&test_str));
+    }
 }
