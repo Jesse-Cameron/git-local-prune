@@ -27,6 +27,8 @@ fn main() {
     let remote_branches = branches::remote::retrieve();
     println!("{:?}", remote_branches);
     // find the subset of branches that are tracking a remote that no long exist
-    //
+    // as in, they are in the in the local but not the remote
+    let orphaned_branches = branches::diff::find_orphaned(local_branches, remote_branches);
+    println!("{:?}", orphaned_branches);
     // delete those branches
 }
