@@ -3,6 +3,7 @@ extern crate regex;
 
 use std::path::Path;
 use std::process;
+use std::fs;
 
 mod branches;
 
@@ -12,23 +13,19 @@ fn main() {
         process::exit(1);
     }
 
-    // println!("pruning current branches");
-    // if let Err(err) = git_prune() {
-    //     println!("Error: {}", err);
-    //     process::exit(1);
-    // }
-
-    // steps
     // find all local branches
-    // find the branches that are tracking a remote
     let local_branches = branches::local::retrieve();
-    println!("{:?}", local_branches);
     // get all of the remote branches
     let remote_branches = branches::remote::retrieve();
-    println!("{:?}", remote_branches);
     // find the subset of branches that are tracking a remote that no long exist
     // as in, they are in the in the local but not the remote
     let orphaned_branches = branches::diff::find_orphaned(local_branches, remote_branches);
-    println!("{:?}", orphaned_branches);
     // delete those branches
+    for branch in &orphaned_branches {
+        let branch_path = branches::delete::get_path(branch);
+        match fs::remove_file(branch_path) {
+            Ok(_) => println!("Deleted Branch: {:?}", branch),
+            Err(e) => println!("Error Deleting Branch: {:?}. Error: {}", branch, e)
+        }
+    }
 }
