@@ -1,26 +1,48 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bats
 
 # the utility will remove branches where the remote track has been deleted
-testDeletesCorrectBranches () {
-  ./setup.sh > /dev/null 2>&1
+@test "deletes correct branches" {
+  # create and delete 10 branches
+  ./setup.sh 10 10
   cd local || fail
   old_branches=($(git branch | awk -F ' +' '! /\(no branch\)/ {print $2}')) # get all local branches without the leading * or (no branch)
-  assertEquals "${#old_branches[@]}" 11 # there should be two branches to begin with
-  git fetch --all --prune > /dev/null 2>&1
+  [ "${#old_branches[@]}" -eq 11 ] # there should be ten branches to begin with
+  git fetch --all --prune
   ../../../target/debug/git-local-prune
-  new_branches=($(git branch | awk -F ' +' '! /\(no branch\)/ {print $2}')) # get all local branches without the leading * or (no branch)
-  assertEquals "${#new_branches[@]}" 1 # there should be only one branch remaining
-  assertEquals "${new_branches[0]}" "master" # it should leave the master
+  new_branches=($(git branch | awk -F ' +' '! /\(no branch\)/ {print $2}')) # get all remaining local branches without the leading * or (no branch)
+  [ "${#new_branches[@]}" -eq 1 ] # there should be only one branch remaining
+  [ "${new_branches[0]}" = "master" ] # it should leave the master
 }
 
 # the utility will not remove branches where the remote still exists
-leaveValidRemoteBranches () {
-  assertEquals 1 1
+@test "leaves valid remote branches" {
+  # create 10 branches, but only delete 8
+  ./setup.sh 10 10 8
+  cd local || fail
+  old_branches=($(git branch | awk -F ' +' '! /\(no branch\)/ {print $2}')) # get all local branches without the leading * or (no branch)
+  [ "${#old_branches[@]}" -eq 11 ] # there should be ten branches to begin with
+  git fetch --all --prune
+  ../../../target/debug/git-local-prune
+  new_branches=($(git branch | awk -F ' +' '! /\(no branch\)/ {print $2}')) # get all remaining local branches without the leading * or (no branch)
+  printf '%s,' "${new_branches[@]}"
+  [ "${#new_branches[@]}" -eq 3 ] # there should be only one branch remaining
+  [ "${new_branches[0]}" = "branch_10" ]
+  [ "${new_branches[1]}" = "branch_9" ]
+  [ "${new_branches[2]}" = "master" ]
 }
 
 # utility will not remove branches where it is not tracking a remote
-leaveValidLocalBranches () {
-  assertEquals 1 1
+@test 'leave valid local branches' {
+  # create 12 local branches, remove 10 remote
+  ./setup.sh 10 12
+  cd local || fail
+  old_branches=($(git branch | awk -F ' +' '! /\(no branch\)/ {print $2}')) # get all local branches without the leading * or (no branch)
+  [ "${#old_branches[@]}" -eq 13 ] # there should be ten branches to begin with
+  git fetch --all --prune
+  ../../../target/debug/git-local-prune
+  new_branches=($(git branch | awk -F ' +' '! /\(no branch\)/ {print $2}')) # get all remaining local branches without the leading * or (no branch)
+  [ "${#new_branches[@]}" -eq 3 ] # there should be only one branch remaining
+  [ "${new_branches[0]}" = "branch_11" ]
+  [ "${new_branches[1]}" = "branch_12" ]
+  [ "${new_branches[2]}" = "master" ]
 }
-
-. ./shunit2.sh

@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 
-set -e
+# example
+# ./setup.sh <remote> <local> <remote_delete>
+
+# TODO: have better validation around this
+if [ -z "$1" ]; then
+  number_of_remote_branches=0
+else
+  number_of_remote_branches=$1
+fi
+
+if [ -z "$2" ]; then
+  number_of_local_branches=0
+else
+  number_of_local_branches=$2
+fi
+
+if [ -z "$3" ]; then
+  number_of_remote_branches_to_delete=number_of_remote_branches
+else
+  number_of_remote_branches_to_delete=$3
+fi
 
 create_repo () {
   repo_name=$1
@@ -39,7 +59,16 @@ setup_local_repo () {
   # start tracking all the remote branches
   for ((i=1; i<=n; i++))
   do
-    git checkout --track origin/"branch_$i"
+    git ls-remote origin | grep -c "branch_$i" # check if the remote exists
+    ret=$?
+    # checkout if it does exist
+    if [ ! "$ret" -ne 0 ]; then
+      git checkout -B "branch_$i" origin/"branch_$i"
+    # create otherwise
+    else
+      git checkout master
+      git branch "branch_$i"
+    fi
   done
   cd -
 }
@@ -54,18 +83,17 @@ prune_remote_branches () {
 }
 
 cleanup () {
-  rm -rf remote
-  rm -rf local
+  rm -rf remote/
+  rm -rf local/
 }
 
 run () {
-  number_of_branches=10
   cleanup
   create_repo "remote"
-  setup_remote_repo "$number_of_branches"
+  setup_remote_repo "$number_of_remote_branches"
   create_repo "local"
-  setup_local_repo "$number_of_branches"
-  prune_remote_branches "$number_of_branches"
+  setup_local_repo "$number_of_local_branches"
+  prune_remote_branches "$number_of_remote_branches_to_delete"
 }
 
 run
