@@ -18,7 +18,7 @@ fn main() {
     // as in, they are in the in the local but not the remote
     let orphaned_branches = branches::diff::find_orphaned(local_branches, remote_branches);
     if orphaned_branches.len() <= 0 {
-        println!("Nothing to delete.");
+        println!("No local branches to prune.");
         process::exit(0);
     }
     
