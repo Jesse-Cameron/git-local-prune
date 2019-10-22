@@ -1,6 +1,3 @@
-extern crate walkdir;
-extern crate regex;
-
 use std::path::Path;
 use std::process;
 use std::fs;
@@ -20,6 +17,11 @@ fn main() {
     // find the subset of branches that are tracking a remote that no long exist
     // as in, they are in the in the local but not the remote
     let orphaned_branches = branches::diff::find_orphaned(local_branches, remote_branches);
+    if orphaned_branches.len() <= 0 {
+        println!("No local branches to prune.");
+        process::exit(0);
+    }
+    
     // delete those branches
     for branch in &orphaned_branches {
         let branch_path = branches::delete::get_path(branch);

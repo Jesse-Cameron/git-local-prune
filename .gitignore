@@ -1,2 +1,4 @@
 /target
 **/*.rs.bk
+test/end-to-end/local
+test/end-to-end/remote
