@@ -9,36 +9,49 @@ jobs:
       - run:
           name: Build all targets
           command: cargo build --all --all-targets
-  test:
+  unit-test:
     docker:
       - image: circleci/rust:latest
     steps:
       - checkout
       - run:
-          name: Version information
-          command: rustc --version; cargo --version; rustup --version
-      - run:
-          name: Calculate dependencies
-          command: cargo generate-lockfile
-      - restore_cache:
-          keys:
-            - v4-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
-      - run:
-          name: Build all targets
-          command: cargo build --all --all-targets
-      - save_cache:
-          paths:
-            - /usr/local/cargo/registry
-            - target/debug/.fingerprint
-            - target/debug/build
-            - target/debug/deps
-          key: v4-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
-      - run:
           name: Run all tests
           command: cargo test --all
+  end-to-end-test:
+    docker:
+      - image: circleci/rust:latest
+    steps:
+      - checkout
+      - run:
+          name: install BATS
+          command: |
+            if which git > /dev/null; then
+              git clone https://github.com/sstephenson/bats.git
+            else
+              echo "git is required to install BATS"
+              exit 1
+            fi
+
+            cd bats
+            sudo ./install.sh /usr/local || \
+              ./install.sh /usr/local
+            cd ..
+            rm -rf bats
+      - run:
+          name: config git
+          command: |
+            git config --global user.email "you@example.com" && \
+            git config --global user.name "Your Name"
+      - run:
+          name: dev build
+          command: cargo build
+      - run:
+          name: Run all tests
+          command: ./test/end-to-end/test.sh
 workflows:
   version: 2
   build_and_test:
     jobs:
       - build
-      - test
+      - unit-test
+      - end-to-end-test
