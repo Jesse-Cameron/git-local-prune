@@ -3,6 +3,8 @@
 # example
 # ./setup.sh <remote> <local> <remote_delete>
 
+TEST_DIR="$(pwd)/test/end-to-end"
+
 # TODO: have better validation around this
 if [ -z "$1" ]; then
   number_of_remote_branches=0
@@ -23,7 +25,7 @@ else
 fi
 
 create_repo () {
-  repo_name=$1
+  repo_name=$TEST_DIR/$1
   if [ ! -d "$repo_name" ]; then
     mkdir "$repo_name"
   fi
@@ -42,7 +44,7 @@ create_branch () {
 
 setup_remote_repo () {
   n=$1
-  cd remote
+  cd $TEST_DIR/remote
   # create testing branches
   for ((i=1; i<=n; i++))
   do
@@ -53,7 +55,7 @@ setup_remote_repo () {
 
 setup_local_repo () {
   n=$1
-  cd local
+  cd $TEST_DIR/local
   git remote add origin ../remote/.git
   git fetch --all
   # start tracking all the remote branches
@@ -75,7 +77,7 @@ setup_local_repo () {
 
 prune_remote_branches () {
   n=$1
-  cd remote
+  cd $TEST_DIR/remote
   for ((i=1; i<=n; i++))
   do
     git branch -D "branch_$i"
@@ -83,8 +85,8 @@ prune_remote_branches () {
 }
 
 cleanup () {
-  rm -rf remote/
-  rm -rf local/
+  rm -rf $TEST_DIR/remote/
+  rm -rf $TEST_DIR/local/
 }
 
 run () {
