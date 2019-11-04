@@ -1,12 +1,13 @@
 use std::path::Path;
 use std::process;
 use std::fs;
+use std::process::Command;
 
 mod branches;
 
 fn main() {
     if !Path::new(".git").exists() {
-        println!("Not in a git directory, couldn't find .git");
+        println!("Not in a git directory, couldn't find .git directory.");
         process::exit(1);
     }
 
@@ -20,6 +21,25 @@ fn main() {
     if orphaned_branches.len() <= 0 {
         println!("No local branches to prune.");
         process::exit(0);
+    }
+
+    // get the current branch and see if it up for deletion
+    match branches::local::get_current() {
+        Ok(current_branch) => {
+            if orphaned_branches.contains(&current_branch) {
+                let status = Command::new("git")
+                    .args(&["checkout", "master"])
+                    .status()
+                    .expect("failed to execute git checkout");
+                if !status.success() {
+                    process::exit(1);
+                }
+            }
+        },
+        Err(_) => {
+            println!("Error getting the current branch.");
+            process::exit(1);
+        }
     }
     
     // delete those branches

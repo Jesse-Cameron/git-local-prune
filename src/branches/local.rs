@@ -5,6 +5,7 @@ use regex::Regex;
 use std::error;
 use std::fmt;
 
+// Custom error for building 
 #[derive(Debug, Clone)]
 pub struct BranchError;
 
