@@ -12,7 +12,11 @@ fn main() {
     }
 
     // find all local branches
-    let local_branches = branches::local::retrieve();
+    let local_branches;
+    match branches::local::retrieve() {
+        Ok(v) => local_branches = v,
+        Err(_) => panic!("Could not retrieve local branches")
+    }
     // get all of the remote branches
     let remote_branches = branches::remote::retrieve();
     // find the subset of branches that are tracking a remote that no long exist
