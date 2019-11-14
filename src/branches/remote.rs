@@ -10,7 +10,7 @@ fn is_not_head(entry: &DirEntry) -> bool {
         .file_name()
         .to_str()
         .map(|s| s.contains("master") || s.contains("HEAD"))
-        .unwrap_or_else(|| false);
+        .unwrap_or(false);
 
     (!is_master)
 }
@@ -18,8 +18,8 @@ fn is_not_head(entry: &DirEntry) -> bool {
 fn is_not_dir(entry: &DirEntry) -> bool {
     let is_dir: bool = entry
         .metadata()
-        .unwrap()
-        .is_dir();
+        .map(|dir| dir.is_dir())
+        .unwrap_or(false);
 
     (!is_dir)
 }
@@ -29,12 +29,10 @@ fn remove_prefix(path: String) -> Option<String> {
         return None
     }
 
-    let re;
-    match Regex::new(r#"^(.git/refs/remotes/origin/)(.*)"#) {
-        Ok(v) => re = v,
-        Err(_) => return None
-    }
-    let replaced_string = re.replace(&path, "$2").into_owned();
+    let replaced_string = Regex::new(r#"^(.git/refs/remotes/origin/)(.*)"#)
+        .ok()?
+        .replace(&path, "$2")
+        .into_owned();
     Some(replaced_string)
 }
 

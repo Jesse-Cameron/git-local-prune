@@ -28,24 +28,12 @@ impl error::Error for BranchError {
     }
 }
 
-fn ignored_branches(branch_name: &&str) -> bool {
+fn ignored_branches(branch_name: &String) -> bool {
     (!branch_name.contains("master"))
 }
 
-fn get_branch_name_from_line(re: Regex, line: &str) -> Option<&str> {
-    let branch_capture;
-    match re.captures(line) {
-        Some(line) => branch_capture = line,
-        None => return None
-    }
-
-    let branch_name;
-    match branch_capture.get(1) {
-        Some(capture) => branch_name = capture.as_str(),
-        None => return None
-    }
-
-    Some(branch_name)
+fn get_branch_name_from_line(re: Regex, line: &str) -> Option<String> {
+    re.captures(line)?.get(1).map(|v| v.as_str().to_string())
 }
 
 /**
@@ -59,7 +47,6 @@ pub fn retrieve() -> Result<Vec<String>> {
         .map(|line| get_branch_name_from_line(re.clone(), line))
         .filter_map(|line| line) // remove any None objects from the list and return the Some value
         .filter(ignored_branches)
-        .map(|line| line.to_string())
         .collect();
 
     Ok(branch_names)
@@ -84,20 +71,20 @@ mod tests {
     #[test]
     fn ignored_branches_valid() {
         let test_str = "origin/master";
-        assert!(!ignored_branches(&test_str));
+        assert!(!ignored_branches(&String::from(test_str)));
     }
 
     #[test]
     fn ignored_branches_invalid() {
         let test_str = "origin/develop";
-        assert!(ignored_branches(&test_str));
+        assert!(ignored_branches(&String::from(test_str)));
     }
 
     #[test]
     fn regex_correctly_returns_value() {
         let test_str = r#"[branch "master"]"#; // correct file line
         let re = Regex::new(r#"^\[branch "([^"]*)"]$"#).unwrap();
-        assert_eq!(get_branch_name_from_line(re, test_str), Some("master"))
+        assert_eq!(get_branch_name_from_line(re, test_str), Some(String::from("master")))
     }
 
     #[test]
