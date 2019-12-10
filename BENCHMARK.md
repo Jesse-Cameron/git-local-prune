@@ -16,6 +16,6 @@ Note: all results are in milliseconds
 
 | Tool            | 10 Branches | 100 Branches | 1,000 Branches |
 |-----------------|-------------|--------------|----------------|
-| git-local-prune | 6ms         | 10ms         | 46ms           |
+| git-local-prune | 4ms         | 8ms         | 30ms           |
 | hub sync        | 80ms        | 485ms        | 16540ms        |
 | bash script     | 10ms        | 70ms         | 3550ms         |
