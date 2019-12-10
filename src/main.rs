@@ -1,9 +1,21 @@
 use std::path::Path;
 use std::process;
 use std::fs;
+use std::error;
 use std::process::Command;
+use futures::{executor, try_join};
 
 mod branches;
+
+async fn get_branches() -> Result<(Vec<String>, Vec<String>), Box<dyn error::Error>> {
+    // find all local branches
+    let get_local_fut = branches::local::retrieve();
+
+    // get all of the remote branches
+    let get_remote_fut = branches::remote::retrieve();
+
+    try_join!(get_local_fut, get_remote_fut)
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !Path::new(".git").exists() {
@@ -11,11 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         process::exit(1);
     }
 
-    // find all local branches
-    let local_branches = branches::local::retrieve()?;
-
-    // get all of the remote branches
-    let remote_branches = branches::remote::retrieve();
+    let (local_branches, remote_branches) = executor::block_on(get_branches())?;
 
     // find the subset of branches that are tracking a remote that no long exist
     // as in, they are in the in the local but not the remote

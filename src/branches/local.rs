@@ -39,7 +39,7 @@ fn get_branch_name_from_line(re: Regex, line: &str) -> Option<String> {
 /**
  * Find branches that are tracking a remote
  */
-pub fn retrieve() -> Result<Vec<String>> {
+pub async fn retrieve() -> Result<Vec<String>> {
     let git_config = fs::read_to_string(".git/config")?;
     let re = Regex::new(r#"^\[branch "([^"]*)"]$"#)?;
     

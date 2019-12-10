@@ -1,9 +1,12 @@
 extern crate regex;
 extern crate walkdir;
 
-
-use walkdir::{WalkDir, DirEntry};
+use std::error;
+use std::result;
 use regex::Regex;
+use walkdir::{WalkDir, DirEntry};
+
+type Result<T> = result::Result<T, Box<dyn error::Error>>;
 
 fn is_not_head(entry: &DirEntry) -> bool {
     let is_master: bool = entry
@@ -36,7 +39,7 @@ fn remove_prefix(path: String) -> Option<String> {
     Some(replaced_string)
 }
 
-pub fn retrieve() ->  Vec<String> {
+pub async fn retrieve() -> Result<Vec<String>> {
     let branches: Vec<String> = WalkDir::new(".git/refs/remotes/origin")
         .into_iter()
         .filter_map(|e| e.ok())
@@ -47,7 +50,7 @@ pub fn retrieve() ->  Vec<String> {
         .filter_map(|line| line)
         .collect();
 
-    (branches)
+    Ok(branches)
 }
 
 #[cfg(test)]
