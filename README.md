@@ -34,4 +34,4 @@ Nope. It will go straight to the relevant files in you `.git` directory and make
 - ***Q: HECK, I just deleted something I should not have! What can I do?***  
 Ouch! If you haven't run `git gc` or `git prune`, you **may** be able to dig old commits out using `git reflog`. Otherwise, your code probably was not that good anyway. 🤷
 - ***Q: Why not use `<insert-custom-script-here>`?***  
-Because Rust. gottagofast.
+Because Rust. gottagofast. Check out the benchmarking results [here](BENCHMARK.md)
