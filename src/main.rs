@@ -1,6 +1,6 @@
 use std::path::Path;
-use std::process;
 use std::fs;
+use std::process;
 use std::process::Command;
 
 mod branches;
@@ -13,9 +13,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // find all local branches
     let local_branches = branches::local::retrieve()?;
+    println!("{:?}", local_branches);
 
     // get all of the remote branches
-    let remote_branches = branches::remote::retrieve();
+    let remote_branches = branches::remote::retrieve()?;
+    println!("{:?}", remote_branches);
 
     // find the subset of branches that are tracking a remote that no long exist
     // as in, they are in the in the local but not the remote

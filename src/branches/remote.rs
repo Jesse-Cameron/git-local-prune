@@ -1,53 +1,30 @@
 extern crate regex;
-extern crate walkdir;
 
-
-use walkdir::{WalkDir, DirEntry};
 use regex::Regex;
+use std::fs;
+use std::result;
+use std::error;
 
-fn is_not_head(entry: &DirEntry) -> bool {
-    let is_master: bool = entry
-        .file_name()
-        .to_str()
-        .map(|s| s.contains("master") || s.contains("HEAD"))
-        .unwrap_or(false);
+type Result<T> = result::Result<T, Box<dyn error::Error>>;
 
-    (!is_master)
+fn ignored_branches(branch_name: &String) -> bool {
+    (!(branch_name == "master") && !(branch_name == "HEAD"))
 }
 
-fn is_not_dir(entry: &DirEntry) -> bool {
-    let is_dir: bool = entry
-        .metadata()
-        .map(|dir| dir.is_dir())
-        .unwrap_or(false);
-
-    (!is_dir)
+fn get_branch_name_from_line(re: Regex, line: &str) -> Option<String> {
+    re.captures(line)?.get(1).map(|res| res.as_str().to_string())
 }
 
-fn remove_prefix(path: String) -> Option<String> {
-    if path.len() == 0 {
-        return None
-    }
-
-    let replaced_string = Regex::new(r#"^(.git/refs/remotes/origin/)(.*)"#)
-        .ok()?
-        .replace(&path, "$2")
-        .into_owned();
-    Some(replaced_string)
-}
-
-pub fn retrieve() ->  Vec<String> {
-    let branches: Vec<String> = WalkDir::new(".git/refs/remotes/origin")
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(is_not_dir)
-        .filter(is_not_head)
-        .map(|e| e.path().to_str().unwrap_or("").to_string())
-        .map(remove_prefix)
-        .filter_map(|line| line)
+pub fn retrieve() -> Result<Vec<String>> {
+    let git_config = fs::read_to_string(".git/info/refs")?;
+    let re = Regex::new(r#"^.*\trefs/remotes/origin/(.*)$"#)?;
+    let branch_names: Vec<String> = git_config.lines()
+        .map(|line| get_branch_name_from_line(re.clone(), line))
+        .filter_map(|line| line) // remove any None objects from the list and return the Some value
+        .filter(ignored_branches)
         .collect();
 
-    (branches)
+    Ok(branch_names)
 }
 
 #[cfg(test)]
@@ -55,14 +32,35 @@ mod tests {
     use super::*;
 
     #[test]
-    fn correctly_removes_prefixes() {
-        let test_str = String::from(".git/refs/remotes/origin/master");
-        assert_eq!(remove_prefix(test_str), Some(String::from("master")));
+    fn ignored_branches_invalid_master() {
+        let test_str = "master";
+        assert!(!ignored_branches(&String::from(test_str)));
     }
 
     #[test]
-    fn correctly_leaves_prefixes() {
-        let test_str = String::from(".git/refs/remotes/tracking/master");
-        assert_eq!(remove_prefix(test_str), Some(String::from(".git/refs/remotes/tracking/master")))
+    fn ignored_branches_invalid_head() {
+        let test_str = "HEAD";
+        assert!(!ignored_branches(&String::from(test_str)));
     }
+
+    #[test]
+    fn ignored_branches_invalid() {
+        let test_str = "feature-branch/master";
+        assert!(ignored_branches(&String::from(test_str)));
+    }
+
+    #[test]
+    fn regex_correctly_returns_value() {
+        let test_str = "e144fd7196f05d33cd1007eaeb722cf465f8eed9	refs/remotes/origin/master"; // correct file line
+        let re = Regex::new(r#"^.*\trefs/remotes/origin/(.*)$"#).unwrap();
+        assert_eq!(get_branch_name_from_line(re, test_str), Some(String::from("master")))
+    }
+
+    #[test]
+    fn regex_correctly_returns_none() {
+        let test_str = r#"[branch "master"]"#; // incorrect file line
+        let re = Regex::new(r#"^.*\trefs/remotes/origin/(.*)$"#).unwrap();
+        assert_eq!(get_branch_name_from_line(re, test_str), None)
+    }
+
 }
